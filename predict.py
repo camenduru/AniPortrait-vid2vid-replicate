@@ -56,21 +56,24 @@ def cut_video_into_three_equal_parts(input_file, output_file_prefix):
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='0', y='0')
-        .output(f'{output_file_prefix}_part1.mp4', map='0:v', map_audio='0:a')
+        .map_audio(0, 0)
+        .output(f'{output_file_prefix}_part1.mp4')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='(iw/3)', y='0')
-        .output(f'{output_file_prefix}_part2.mp4', map='0:v', map_audio='0:a')
+        .map_audio(0, 0)
+        .output(f'{output_file_prefix}_part2.mp4')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='(iw/3)*2', y='0')
-        .output(f'{output_file_prefix}_part3.mp4', map='0:v', map_audio='0:a')
+        .map_audio(0, 0)
+        .output(f'{output_file_prefix}_part3.mp4')
         .run(overwrite_output=True)
     )
 
