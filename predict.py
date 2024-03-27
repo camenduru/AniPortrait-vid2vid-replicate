@@ -256,12 +256,14 @@ class Predictor(BasePredictor):
             fps=src_fps if args.fps is None else args.fps,
         )
 
-        probe = ffmpeg.probe(save_path)
-        duration = float(probe['format']['duration'])
+        audio_output = '/content/audio_from_video.aac'
         output_file = "/content/output.mp4"
-        audio_stream = ffmpeg.input(source_video_path).audio.filter('atrim', duration=duration)
+        ffmpeg.input(source_video_path).output(audio_output, acodec='copy').run(overwrite_output=True)
         video_stream = ffmpeg.input(save_path)
-        ffmpeg.output(video_stream, audio_stream, output_file).overwrite_output().run()
+        audio_stream = ffmpeg.input(audio_output)
+        ffmpeg.output(video_stream.video, audio_stream.audio, output_file, vcodec='copy', acodec='aac').run(overwrite_output=True)
+
         cut_video_into_three_equal_parts(output_file)
+
         # return Path('/content/output_part2.mp4')
         return [Path("/content/output.mp4"), Path("/content/output_part1_a.mp4"), Path("/content/output_part2_a.mp4"), Path("/content/output_part3_a.mp4")]
