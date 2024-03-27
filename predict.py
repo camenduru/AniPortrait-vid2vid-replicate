@@ -51,31 +51,37 @@ class Args:
         self.steps = 25
         self.fps = 30
 
-def cut_video_into_three_equal_parts(input_file, output_file_prefix):
+def cut_video_into_three_equal_parts(input_file):
     (
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='0', y='0')
-        .map_audio(0, 0)
-        .output(f'{output_file_prefix}_part1.mp4')
+        .output('/content/output_part1.mp4')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
-        .filter('crop', 'iw/3', 'ih', x='(iw/3)', y='0')
-        .map_audio(0, 0)
-        .output(f'{output_file_prefix}_part2.mp4')
+        .filter('crop', 'iw/3', 'ih', x='iw/3', y='0')
+        .output('/content/output_part2.mp4')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
-        .filter('crop', 'iw/3', 'ih', x='(iw/3)*2', y='0')
-        .map_audio(0, 0)
-        .output(f'{output_file_prefix}_part3.mp4')
+        .filter('crop', 'iw/3', 'ih', x='iw*2/3', y='0')
+        .output('/content/output_part3.mp4')
         .run(overwrite_output=True)
     )
+    audio_output = 'audio_from_video.aac'
+    ffmpeg.input(input_file).audio.output(audio_output, acodec='copy').run(overwrite_output=True)
+    audio = ffmpeg.input(audio_output)
+    video1 = ffmpeg.input('/content/output_part1.mp4')
+    video2 = ffmpeg.input('/content/output_part2.mp4')
+    video3 = ffmpeg.input('/content/output_part3.mp4')
+    ffmpeg.concat(video1, audio, v=1, a=1).output('/content/output_part1_a.mp4').run(overwrite_output=True)
+    ffmpeg.concat(video2, audio, v=1, a=1).output('/content/output_part2_a.mp4').run(overwrite_output=True)
+    ffmpeg.concat(video3, audio, v=1, a=1).output('/content/output_part3_a.mp4').run(overwrite_output=True)
 
 config = ChatGPTConfig()
 args = Args()
@@ -256,6 +262,6 @@ class Predictor(BasePredictor):
         audio_stream = ffmpeg.input(source_video_path).audio.filter('atrim', duration=duration)
         video_stream = ffmpeg.input(save_path)
         ffmpeg.output(video_stream, audio_stream, output_file).overwrite_output().run()
-        cut_video_into_three_equal_parts(output_file, '/content/output')
+        cut_video_into_three_equal_parts(output_file)
         # return Path('/content/output_part2.mp4')
-        return [Path("/content/output.mp4"), Path("/content/output_part1.mp4"), Path("/content/output_part2.mp4"), Path("/content/output_part3.mp4")]
+        return [Path("/content/output.mp4"), Path("/content/output_part1_a.mp4"), Path("/content/output_part2_a.mp4"), Path("/content/output_part3_a.mp4")]
