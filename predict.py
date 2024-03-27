@@ -162,7 +162,7 @@ class Predictor(BasePredictor):
         args.seed = seed
         args.cfg = cfg
         args.steps = steps
-        args.fps = 30
+        args.fps = None
 
         generator = torch.manual_seed(args.seed)
 
@@ -256,12 +256,12 @@ class Predictor(BasePredictor):
             fps=src_fps if args.fps is None else args.fps,
         )
 
-        audio_output = '/content/audio_from_video.aac'
+        probe = ffmpeg.probe(save_path)
+        duration = float(probe['format']['duration'])
         output_file = "/content/output.mp4"
-        ffmpeg.input(source_video_path).output(audio_output, acodec='copy').run(overwrite_output=True)
+        audio_stream = ffmpeg.input(source_video_path).audio.filter('atrim', duration=duration)
         video_stream = ffmpeg.input(save_path)
-        audio_stream = ffmpeg.input(audio_output)
-        ffmpeg.output(video_stream.video, audio_stream.audio, output_file, vcodec='copy', acodec='aac').run(overwrite_output=True)
+        ffmpeg.output(video_stream, audio_stream, output_file).overwrite_output().run(overwrite_output=True)
 
         cut_video_into_three_equal_parts(output_file)
 
