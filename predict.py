@@ -1,5 +1,6 @@
 import os
 from cog import BasePredictor, Input, Path
+from typing import List
 import sys
 sys.path.append('/content/AniPortrait')
 os.chdir('/content/AniPortrait')
@@ -141,7 +142,7 @@ class Predictor(BasePredictor):
         self,
         ref_image_path: Path = Input(description="Input image"),
         source_video_path: Path = Input(description="Input video"),
-    ) -> Path:
+    ) -> List[Path]:
         ref_image_pil = Image.open(ref_image_path).convert("RGB")
         ref_image_np = cv2.cvtColor(np.array(ref_image_pil), cv2.COLOR_RGB2BGR)
         ref_image_np = cv2.resize(ref_image_np, (args.H, args.W))
@@ -239,4 +240,5 @@ class Predictor(BasePredictor):
         video_stream = ffmpeg.input(save_path)
         ffmpeg.output(video_stream, audio_stream, output_file).overwrite_output().run()
         cut_video_into_three_equal_parts(output_file, '/content/output')
-        return Path('/content/output_part2.mp4')
+        # return Path('/content/output_part2.mp4')
+        return [Path("/content/output.mp4"), Path("/content/output_part1.mp4"), Path("/content/output_part2.mp4"), Path("/content/output_part3.mp4")]
