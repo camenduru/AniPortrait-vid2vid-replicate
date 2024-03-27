@@ -56,21 +56,21 @@ def cut_video_into_three_equal_parts(input_file, output_file_prefix):
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='0', y='0')
-        .output(f'{output_file_prefix}_part1.mp4', acodec='copy')
+        .output(f'{output_file_prefix}_part1.mp4', map='0:v', map_audio='0:a')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='(iw/3)', y='0')
-        .output(f'{output_file_prefix}_part2.mp4', acodec='copy')
+        .output(f'{output_file_prefix}_part2.mp4', map='0:v', map_audio='0:a')
         .run(overwrite_output=True)
     )
     (
         ffmpeg
         .input(input_file)
         .filter('crop', 'iw/3', 'ih', x='(iw/3)*2', y='0')
-        .output(f'{output_file_prefix}_part3.mp4', acodec='copy')
+        .output(f'{output_file_prefix}_part3.mp4', map='0:v', map_audio='0:a')
         .run(overwrite_output=True)
     )
 
@@ -112,8 +112,6 @@ class Predictor(BasePredictor):
         sched_kwargs = OmegaConf.to_container(infer_config.noise_scheduler_kwargs)
         scheduler = DDIMScheduler(**sched_kwargs)
 
-        self.generator = torch.manual_seed(args.seed)
-
         denoising_unet.load_state_dict(
             torch.load(config.denoising_unet_path, map_location="cpu"),
             strict=False,
@@ -142,7 +140,23 @@ class Predictor(BasePredictor):
         self,
         ref_image_path: Path = Input(description="Input image"),
         source_video_path: Path = Input(description="Input video"),
+        width : int = Input(default=512),
+        height: int = Input(default=512),
+        lenght: int = Input(default=64),
+        seed: int = Input(default=42),
+        cfg: float = Input(default=3.5),
+        steps: int = Input(default=25),
     ) -> List[Path]:
+        args.W = width
+        args.H = height
+        args.L = lenght
+        args.seed = seed
+        args.cfg = cfg
+        args.steps = steps
+        args.fps = 30
+
+        generator = torch.manual_seed(args.seed)
+
         ref_image_pil = Image.open(ref_image_path).convert("RGB")
         ref_image_np = cv2.cvtColor(np.array(ref_image_pil), cv2.COLOR_RGB2BGR)
         ref_image_np = cv2.resize(ref_image_np, (args.H, args.W))
@@ -220,7 +234,7 @@ class Predictor(BasePredictor):
             video_length,
             args.steps,
             args.cfg,
-            generator=self.generator,
+            generator=generator,
         ).videos
 
         video = torch.cat([ref_image_tensor, video, src_tensor], dim=0)
