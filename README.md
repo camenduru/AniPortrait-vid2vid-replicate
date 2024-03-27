@@ -3,7 +3,7 @@
 🥳 Please join my patreon community https://patreon.com/camenduru <br />
 
 ### 🕸 Replicate
-https://replicate.com/camenduru/geowizard
+https://replicate.com/camenduru/aniportrait-vid2vid
 
 ### 🧬 Code
 https://github.com/Zejun-Yang/AniPortrait
