@@ -111,7 +111,7 @@ class Predictor(BasePredictor):
         sched_kwargs = OmegaConf.to_container(infer_config.noise_scheduler_kwargs)
         scheduler = DDIMScheduler(**sched_kwargs)
 
-        generator = torch.manual_seed(args.seed)
+        self.generator = torch.manual_seed(args.seed)
 
         denoising_unet.load_state_dict(
             torch.load(config.denoising_unet_path, map_location="cpu"),
@@ -219,7 +219,7 @@ class Predictor(BasePredictor):
             video_length,
             args.steps,
             args.cfg,
-            generator=generator,
+            generator=self.generator,
         ).videos
 
         video = torch.cat([ref_image_tensor, video, src_tensor], dim=0)
