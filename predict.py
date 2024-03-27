@@ -113,8 +113,6 @@ class Predictor(BasePredictor):
 
         generator = torch.manual_seed(args.seed)
 
-        width, height = args.W, args.H
-
         denoising_unet.load_state_dict(
             torch.load(config.denoising_unet_path, map_location="cpu"),
             strict=False,
@@ -157,7 +155,7 @@ class Predictor(BasePredictor):
         src_fps = get_fps(source_video_path)
         print(f"source video has {len(source_images)} frames, with {src_fps} fps")
         pose_transform = transforms.Compose(
-            [transforms.Resize((height, width)), transforms.ToTensor()]
+            [transforms.Resize((args.H, args.W)), transforms.ToTensor()]
         )
 
         step = 1
@@ -180,7 +178,6 @@ class Predictor(BasePredictor):
             verts_list.append(src_img_result['lmks3d'])
             bs_list.append(src_img_result['bs'])
 
-
         pose_arr = np.array(pose_trans_list)
         verts_arr = np.array(verts_list)
         bs_arr = np.array(bs_list)
@@ -194,7 +191,7 @@ class Predictor(BasePredictor):
         pose_list = []
         for i, verts in enumerate(projected_vertices):
             lmk_img = self.vis.draw_landmarks((frame_width, frame_height), verts, normed=False)
-            pose_image_np = cv2.resize(lmk_img,  (width, height))
+            pose_image_np = cv2.resize(lmk_img,  (args.W, args.H))
             pose_list.append(pose_image_np)
 
         pose_list = np.array(pose_list)
@@ -217,8 +214,8 @@ class Predictor(BasePredictor):
             ref_image_pil,
             pose_list,
             ref_pose,
-            width,
-            height,
+            args.W,
+            args.H,
             video_length,
             args.steps,
             args.cfg,
